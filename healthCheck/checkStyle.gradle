@@ -1,0 +1,30 @@
+apply plugin: 'checkstyle'
+
+task cleanCheckStyleReport(type: Delete){
+    group = 'Code Quality'
+    delete "$project.rootDir/reports/checkstyle"
+}
+
+task checkstyle(type: Checkstyle) {
+    description 'Checkstyle inspection'
+    group = 'Code Quality'
+    configFile file("${project.rootDir}/healthCheck/check_style.xml")
+    source 'src/main', 'src/release'
+    include '**/*.java'
+    exclude '**/gen/**'
+    exclude '**/R.java'
+    exclude '**/BuildConfig.java'
+
+    ignoreFailures = false
+    showViolations = true
+
+    classpath = files()
+    reports {
+        html {
+            destination new File("$project.rootDir/reports/checkstyle/" + project.getName() + "_checkstyle.html")
+        }
+        xml {
+            destination new File("$project.rootDir/reports/checkstyle/" + project.getName() + "_checkstyle.xml")
+        }
+    }
+}

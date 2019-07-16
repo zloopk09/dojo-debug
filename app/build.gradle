@@ -1,0 +1,110 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'kotlin-android-extensions'
+apply from: '../signingHelper.gradle'
+
+ext {
+    isFromCI = System.getenv("isFromCI") == "true"
+}
+
+android {
+    compileSdkVersion 28
+    defaultConfig {
+        applicationId "top.zloop.mobile.dojo"
+        minSdkVersion 21
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    dataBinding {
+        enabled = true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    buildTypes {
+        debug {
+            applicationIdSuffix '.debug'
+            versionNameSuffix "-DEBUG"
+            //启用Android插件的压缩 但是不做代码混淆 ref:https://developer.android.com/studio/build/shrink-code?hl=zh-cn
+            minifyEnabled true
+            useProguard false
+            shrinkResources true
+            zipAlignEnabled true
+            buildConfigField("String", "BUILD_TIME", "\"0000\"")
+            //resValue("string", "build_time", "0")
+            ext.enableCrashlytics = false
+            ext.alwaysUpdateBuildId = false
+//            resConfigs "zh", "xxhdpi"
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            testProguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguardTest-rules.pro'
+        }
+        release {
+            //versionNameSuffix "-RELEASE"
+            minifyEnabled true
+            shrinkResources true
+            zipAlignEnabled true
+            ext.enableCrashlytics = true
+            ext.alwaysUpdateBuildId = true
+//            project.archivesBaseName = APK_NAME+"-"+VERSION_NAME + "-"+buildDate;
+            signingConfig signingConfigs.release
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            testProguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguardTest-rules.pro'
+        }
+        pre {
+            initWith release
+            debuggable true
+            versionNameSuffix "-PRE"
+            applicationIdSuffix '.pre'
+            matchingFallbacks = ['release', 'debug']
+        }
+    }
+
+    applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            println "### variant.outputs.each"
+//            freeMarketDebug-版本号-版本名称-编译时间.apk
+//            if (variant.buildType.name.contains('release')) {
+//                variant.mergedFlavor.versionCode = getVersionCode
+//                variant.mergedFlavor.versionName = getVersionName + "-" + variant.flavorName
+            output.outputFileName = "${rootProject.name}_${variant.flavorName}_${variant.buildType.name}.apk"
+//            }
+
+        }
+    }
+
+    packagingOptions {
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/ASL2.0'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/MANIFEST.MF'
+    }
+
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
+        // ignoreWarnings true
+        xmlReport false
+        htmlReport true
+        lintConfig file("${project.rootDir}/healthCheck/lint.xml")
+        xmlOutput file("$project.rootDir/reports/lint/" + project.getName() + "_lint.xml")
+        htmlOutput file("$project.rootDir/reports/lint/" + project.getName() + "_lint.html")
+    }
+
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'androidx.appcompat:appcompat:1.0.2'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'androidx.test:runner:1.2.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+}
