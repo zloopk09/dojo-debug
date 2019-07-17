@@ -33,11 +33,6 @@ allprojects {
 
 }
 
-//subprojects {
-//    apply from: "$rootProject.projectDir/healthCheck/checkStyle.gradle"
-//    apply from: "$rootProject.projectDir/healthCheck/findbugs.gradle"
-//    apply from: "$rootProject.projectDir/gradleScript/base.gradle"
-//}
 
 task clean(type: Delete) {
     delete rootProject.buildDir
